@@ -372,6 +372,20 @@
   }
 
   // ---------- data ----------
+  // 12문항(유형당 3문항), 4점 척도는 그대로 유지하되
+  // 문항마다 "자기 유형"뿐 아니라 나머지 3유형 점수에도 함께 영향을 주도록
+  // 가중치를 둡니다. 순환 관계: 테이커 - 매쳐 - 기버 - 호구 - (다시 테이커)
+  //   - 이웃(인접) 유형: 살짝 같이 오른다 (+1)
+  //   - 정반대 유형: 강하게 내려간다 (-2)   ex) 테이커의 반대는 기버, 매쳐의 반대는 호구
+  var WEIGHTS = {
+    taker:   { taker:3, matcher:1,  giver:-2, doormat:1  },
+    matcher: { taker:1, matcher:3,  giver:1,  doormat:-2 },
+    giver:   { taker:-2, matcher:1, giver:3,  doormat:1  },
+    doormat: { taker:1, matcher:-2, giver:1,  doormat:3  }
+  };
+  // 이 가중치 구조상 유형별 점수 이론값 범위는 항상 -9 ~ 54로 고정됩니다(아래 참고).
+  var SCORE_MIN = -9, SCORE_MAX = 54;
+
   var QUESTIONS_SELF = [
     { id:1,  axis:'taker',   text:"성과가 나면 '내가 주도했다'는 걸 분명히 해두는 편이다." },
     { id:2,  axis:'taker',   text:"함께 해낸 일도 결국 내 성과로 정리하는 게 편하다." },
@@ -590,10 +604,15 @@
   function computeScores() {
     var scores = { taker:0, matcher:0, giver:0, doormat:0 };
     currentQuestions().forEach(function(q){
-      var v = state.answers[q.id] || 0;
-      scores[q.axis] += v;
+      var v = state.answers[q.id];
+      if (!v) return;
+      var w = WEIGHTS[q.axis];
+      scores.taker   += w.taker   * v;
+      scores.matcher += w.matcher * v;
+      scores.giver   += w.giver   * v;
+      scores.doormat += w.doormat * v;
     });
-    return scores; // each axis 3~12
+    return scores; // 유형별 이론값 범위: SCORE_MIN(-9) ~ SCORE_MAX(54)
   }
 
   function renderResult() {
@@ -618,8 +637,9 @@
       }).catch(function(e){ console.warn('저장 실패', e); });
     }
 
-    var scoreTotal = scores.taker + scores.matcher + scores.giver + scores.doormat;
-    function pctShare(k){ return scoreTotal ? Math.round((scores[k]/scoreTotal)*100) : 25; }
+    function pctShare(k){
+      return Math.round(((scores[k] - SCORE_MIN) / (SCORE_MAX - SCORE_MIN)) * 100);
+    }
 
     var isOther = state.mode === 'other';
     var eyebrow;
@@ -669,7 +689,7 @@
 
         '<div class="roosevelt">' + ROOSEVELT + '<span class="attr">— Theodore Roosevelt</span></div>' +
 
-        '<div class="footnote">각 유형(3문항)의 점수를 모두 더한 뒤, 그중 이 유형이 차지하는 비율로 퍼센트를 계산합니다. 네 유형은 우열이 아니라 서로 다른 관계 방식입니다.</div>' +
+        '<div class="footnote">12개 문항 모두가 네 유형 점수에 함께 영향을 줍니다. 한 유형에 강하게 응답할수록 정반대 유형(테이커↔기버, 매쳐↔호구) 점수는 낮아지고, 인접한 유형은 함께 오르내립니다. 네 유형은 우열이 아니라 서로 다른 관계 방식입니다.</div>' +
 
         '<div class="btn-row">' +
           '<button class="btn btn-ghost" style="width:100%" onclick="App.restart()">다시 진단하기</button>' +
