@@ -115,6 +115,7 @@
 
   var TYPE_COLOR = { taker:'#3F6B45', matcher:'#3B4A66', giver:'#C9A227', doormat:'#C1452D' };
   var TYPE_NAME  = { taker:'테이커', matcher:'매쳐', giver:'기버', doormat:'호구' };
+  var TYPE_EMOJI = { taker:'🟢', matcher:'🔵', giver:'🟡', doormat:'🔴' };
 
   function doLogin(){
     var pw = document.getElementById('password').value;
@@ -150,14 +151,18 @@
         document.getElementById('tableWrap').innerHTML = '<div class="empty">아직 진단 이력이 없습니다.</div>';
         return;
       }
-      var html = '<table><thead><tr><th>일시</th><th>이름</th><th>모드</th><th>유형</th><th>테이커</th><th>매쳐</th><th>기버</th><th>호구</th></tr></thead><tbody>';
+      var html = '<table><thead><tr><th>일시</th><th>이름</th><th>모드</th><th>유형</th>' +
+        '<th style="color:' + TYPE_COLOR.taker + '">테이커</th>' +
+        '<th style="color:' + TYPE_COLOR.matcher + '">매쳐</th>' +
+        '<th style="color:' + TYPE_COLOR.giver + '">기버</th>' +
+        '<th style="color:' + TYPE_COLOR.doormat + '">호구</th></tr></thead><tbody>';
       rows.forEach(function(r){
         var s = r.scores || {};
         html += '<tr>' +
           '<td>' + fmtDate(r.createdAt) + '</td>' +
           '<td>' + (r.name ? escapeHtml(r.name) : '<span style="color:var(--ink-soft)">-</span>') + '</td>' +
           '<td>' + (r.mode === 'other' ? '그 사람을 진단' : '나를 진단') + '</td>' +
-          '<td><span class="type-chip" style="background:' + (TYPE_COLOR[r.type]||'#999') + '">' + (TYPE_NAME[r.type]||r.type) + '</span></td>' +
+          '<td><span class="type-chip" style="background:' + (TYPE_COLOR[r.type]||'#999') + '">' + (TYPE_EMOJI[r.type]||'') + ' ' + (TYPE_NAME[r.type]||r.type) + '</span></td>' +
           '<td>' + (s.taker!=null?s.taker:'-') + '</td>' +
           '<td>' + (s.matcher!=null?s.matcher:'-') + '</td>' +
           '<td>' + (s.giver!=null?s.giver:'-') + '</td>' +

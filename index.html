@@ -15,6 +15,8 @@
     --moss: #3F6B45;    /* 테이커 */
     --slate: #3B4A66;   /* 매쳐 */
     --amber: #C9A227;   /* 기버 */
+    --wine: #8C4444;    /* 나를 진단 */
+    --navy: #3A5470;    /* 그 사람을 진단 */
     --font-display: "Noto Serif KR", "Apple SD Gothic Neo", "Nanum Myeongjo", serif;
     --font-body: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif;
     --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
@@ -22,7 +24,7 @@
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  html, body { height: 100%; }
+  html, body { min-height: 100%; }
 
   body {
     font-family: var(--font-body);
@@ -31,16 +33,13 @@
       radial-gradient(circle at 12% 8%, rgba(193,69,45,0.07), transparent 45%),
       radial-gradient(circle at 88% 92%, rgba(63,107,69,0.08), transparent 45%),
       var(--cream);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 32px 20px;
+    padding: calc(32px + env(safe-area-inset-top, 0px)) 20px 48px;
   }
 
   .stage {
     width: 100%;
     max-width: 560px;
+    margin: 0 auto;
   }
 
   .card {
@@ -58,11 +57,9 @@
   }
 
   .eyebrow {
-    font-family: var(--font-mono);
+    font-family: var(--font-body);
     font-size: 12px;
-    letter-spacing: 0.14em;
-    color: var(--rust);
-    text-transform: uppercase;
+    color: var(--ink-soft);
     margin-bottom: 14px;
   }
 
@@ -107,7 +104,7 @@
   .choice:active { transform: scale(0.99); }
   .choice.selected { border-color: var(--ink); background: #FBFAF7; font-weight: 600; }
 
-  .choice-title { font-weight: 600; margin-bottom: 4px; }
+  .choice-title { font-weight: 700; font-size: 19px; margin-bottom: 4px; }
   .choice-desc { font-size: 13px; color: var(--ink-soft); }
 
   input[type="text"] {
@@ -147,7 +144,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-family: var(--font-mono);
+    font-family: var(--font-body);
     font-size: 12px;
     color: var(--ink-soft);
     margin-bottom: 10px;
@@ -198,9 +195,8 @@
   .result-card { padding: 40px 36px 34px; }
 
   .result-eyebrow {
-    font-family: var(--font-mono);
+    font-family: var(--font-body);
     font-size: 12px;
-    letter-spacing: 0.1em;
     color: var(--ink-soft);
     margin-bottom: 10px;
     animation: fadeIn 0.4s ease both;
@@ -533,13 +529,13 @@
         '<div class="divider"></div>' +
         '<p class="lead" style="margin-bottom:14px"><strong>무엇을 진단할까요?</strong></p>' +
         '<div class="choice-list">' +
-          '<div class="choice" onclick="App.chooseMode(\'other\')">' +
-            '<div class="choice-title">그 사람을 진단</div>' +
-            '<div class="choice-desc">같이 일하는 동료·팀원이 어떤 유형인지</div>' +
-          '</div>' +
           '<div class="choice" onclick="App.chooseMode(\'self\')">' +
-            '<div class="choice-title">나를 진단</div>' +
+            '<div class="choice-title" style="color:var(--wine)">나를 진단</div>' +
             '<div class="choice-desc">나는 관계에서 주로 어떤 자리를 차지하는지</div>' +
+          '</div>' +
+          '<div class="choice" onclick="App.chooseMode(\'other\')">' +
+            '<div class="choice-title" style="color:var(--navy)">그 사람을 진단</div>' +
+            '<div class="choice-desc">같이 일하는 동료·팀원이 어떤 유형인지</div>' +
           '</div>' +
         '</div>' +
       '</div>';
