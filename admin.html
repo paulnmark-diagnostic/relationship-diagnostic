@@ -67,6 +67,19 @@
   .logout { font-size: 12px; color: var(--ink-soft); cursor: pointer; background:none; border:none; width:auto; padding:0; }
   #dash { display: none; }
   .empty { color: var(--ink-soft); font-size: 14px; padding: 30px 0; text-align:center; }
+
+  .toolbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 12px; }
+  .toolbar-left { display:flex; align-items:center; gap: 8px; font-size: 13px; color: var(--ink-soft); }
+  .toolbar-right { display:flex; gap: 8px; }
+  .btn-sm {
+    width: auto; padding: 7px 13px; font-size: 12.5px; font-weight: 600;
+    border-radius: 3px; cursor: pointer;
+  }
+  .btn-danger { background: var(--rust); border: 1px solid var(--rust); color: #fff; }
+  .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-outline { background: transparent; border: 1px solid var(--line); color: var(--ink-soft); }
+  input[type="checkbox"] { width: auto; margin: 0; }
+  td.chk, th.chk { width: 28px; }
 </style>
 </head>
 <body>
@@ -89,6 +102,16 @@
       <div style="text-align:right">
         <div class="count" id="count">0건</div>
         <button class="logout" onclick="doLogout()">로그아웃</button>
+      </div>
+    </div>
+    <div class="toolbar" id="toolbar" style="display:none">
+      <label class="toolbar-left">
+        <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)">
+        전체 선택
+      </label>
+      <div class="toolbar-right">
+        <button class="btn-sm btn-danger" id="btnDeleteSelected" disabled onclick="deleteSelected()">선택 삭제</button>
+        <button class="btn-sm btn-outline" onclick="deleteAll()">전체 삭제</button>
       </div>
     </div>
     <div id="tableWrap"></div>
@@ -142,38 +165,86 @@
            ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   }
 
+  var currentRows = []; // [{id, data}]
+
   function loadData(){
+    document.getElementById('toolbar').style.display = 'none';
     db.collection('diagnoses').orderBy('createdAt', 'desc').limit(300).get().then(function(snap){
-      var rows = [];
-      snap.forEach(function(doc){ rows.push(doc.data()); });
-      document.getElementById('count').textContent = rows.length + '건';
-      if (rows.length === 0) {
+      currentRows = [];
+      snap.forEach(function(doc){ currentRows.push({ id: doc.id, data: doc.data() }); });
+      document.getElementById('count').textContent = currentRows.length + '건';
+      if (currentRows.length === 0) {
         document.getElementById('tableWrap').innerHTML = '<div class="empty">아직 진단 이력이 없습니다.</div>';
         return;
       }
-      var html = '<table><thead><tr><th>일시</th><th>이름</th><th>모드</th><th>유형</th>' +
-        '<th style="color:' + TYPE_COLOR.taker + '">테이커</th>' +
-        '<th style="color:' + TYPE_COLOR.matcher + '">매쳐</th>' +
-        '<th style="color:' + TYPE_COLOR.giver + '">기버</th>' +
-        '<th style="color:' + TYPE_COLOR.doormat + '">호구</th></tr></thead><tbody>';
-      rows.forEach(function(r){
-        var s = r.scores || {};
-        html += '<tr>' +
-          '<td>' + fmtDate(r.createdAt) + '</td>' +
-          '<td>' + (r.name ? escapeHtml(r.name) : '<span style="color:var(--ink-soft)">-</span>') + '</td>' +
-          '<td>' + (r.mode === 'other' ? '그 사람을 진단' : '나를 진단') + '</td>' +
-          '<td><span class="type-chip" style="background:' + (TYPE_COLOR[r.type]||'#999') + '">' + (TYPE_EMOJI[r.type]||'') + ' ' + (TYPE_NAME[r.type]||r.type) + '</span></td>' +
-          '<td>' + (s.taker!=null?s.taker:'-') + '</td>' +
-          '<td>' + (s.matcher!=null?s.matcher:'-') + '</td>' +
-          '<td>' + (s.giver!=null?s.giver:'-') + '</td>' +
-          '<td>' + (s.doormat!=null?s.doormat:'-') + '</td>' +
-        '</tr>';
-      });
-      html += '</tbody></table>';
-      document.getElementById('tableWrap').innerHTML = html;
+      document.getElementById('toolbar').style.display = 'flex';
+      document.getElementById('selectAll').checked = false;
+      renderTable();
     }).catch(function(err){
       document.getElementById('tableWrap').innerHTML = '<div class="empty">불러오기 실패: ' + err.message + '</div>';
     });
+  }
+
+  function renderTable(){
+    var html = '<table><thead><tr><th class="chk"></th><th>일시</th><th>이름</th><th>모드</th><th>유형</th>' +
+      '<th style="color:' + TYPE_COLOR.taker + '">테이커</th>' +
+      '<th style="color:' + TYPE_COLOR.matcher + '">매쳐</th>' +
+      '<th style="color:' + TYPE_COLOR.giver + '">기버</th>' +
+      '<th style="color:' + TYPE_COLOR.doormat + '">호구</th></tr></thead><tbody>';
+    currentRows.forEach(function(row){
+      var r = row.data;
+      var s = r.scores || {};
+      html += '<tr>' +
+        '<td class="chk"><input type="checkbox" class="rowChk" data-id="' + row.id + '" onchange="onRowCheck()"></td>' +
+        '<td>' + fmtDate(r.createdAt) + '</td>' +
+        '<td>' + (r.name ? escapeHtml(r.name) : '<span style="color:var(--ink-soft)">-</span>') + '</td>' +
+        '<td>' + (r.mode === 'other' ? '그 사람을 진단' : '나를 진단') + '</td>' +
+        '<td><span class="type-chip" style="background:' + (TYPE_COLOR[r.type]||'#999') + '">' + (TYPE_EMOJI[r.type]||'') + ' ' + (TYPE_NAME[r.type]||r.type) + '</span></td>' +
+        '<td>' + (s.taker!=null?s.taker:'-') + '</td>' +
+        '<td>' + (s.matcher!=null?s.matcher:'-') + '</td>' +
+        '<td>' + (s.giver!=null?s.giver:'-') + '</td>' +
+        '<td>' + (s.doormat!=null?s.doormat:'-') + '</td>' +
+      '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('tableWrap').innerHTML = html;
+    onRowCheck();
+  }
+
+  function toggleSelectAll(checked){
+    document.querySelectorAll('.rowChk').forEach(function(el){ el.checked = checked; });
+    onRowCheck();
+  }
+
+  function getSelectedIds(){
+    return Array.prototype.slice.call(document.querySelectorAll('.rowChk:checked')).map(function(el){
+      return el.getAttribute('data-id');
+    });
+  }
+
+  function onRowCheck(){
+    var n = getSelectedIds().length;
+    document.getElementById('btnDeleteSelected').disabled = n === 0;
+    document.getElementById('btnDeleteSelected').textContent = n === 0 ? '선택 삭제' : '선택 삭제 (' + n + ')';
+    var all = document.querySelectorAll('.rowChk').length;
+    document.getElementById('selectAll').checked = all > 0 && n === all;
+  }
+
+  function deleteSelected(){
+    var ids = getSelectedIds();
+    if (ids.length === 0) return;
+    if (!confirm(ids.length + '건을 삭제할까요? 되돌릴 수 없습니다.')) return;
+    var batch = db.batch();
+    ids.forEach(function(id){ batch.delete(db.collection('diagnoses').doc(id)); });
+    batch.commit().then(loadData).catch(function(err){ alert('삭제 실패: ' + err.message); });
+  }
+
+  function deleteAll(){
+    if (currentRows.length === 0) return;
+    if (!confirm('전체 ' + currentRows.length + '건을 모두 삭제할까요? 되돌릴 수 없습니다.')) return;
+    var batch = db.batch();
+    currentRows.forEach(function(row){ batch.delete(db.collection('diagnoses').doc(row.id)); });
+    batch.commit().then(loadData).catch(function(err){ alert('삭제 실패: ' + err.message); });
   }
 
   function escapeHtml(s){
