@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관계정서진단 — 테이커·매쳐·기버·호구</title>
+<style>
+  :root {
+    --cream: #F4F1EA;
+    --paper: #FFFFFF;
+    --ink: #2A2420;
+    --ink-soft: #6B6255;
+    --line: #E4DDD0;
+    --rust: #C1452D;    /* 호구 */
+    --moss: #3F6B45;    /* 테이커 */
+    --slate: #3B4A66;   /* 매쳐 */
+    --amber: #C9A227;   /* 기버 */
+    --font-display: "Noto Serif KR", "Apple SD Gothic Neo", "Nanum Myeongjo", serif;
+    --font-body: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif;
+    --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 12% 8%, rgba(193,69,45,0.07), transparent 45%),
+      radial-gradient(circle at 88% 92%, rgba(63,107,69,0.08), transparent 45%),
+      var(--cream);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+  }
+
+  .stage {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 44px 40px;
+    box-shadow: 0 1px 2px rgba(42,36,32,0.03);
+    animation: rise 0.45s ease both;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--rust);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    line-height: 1.35;
+    font-weight: 700;
+    margin-bottom: 18px;
+  }
+
+  .lead {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  .lead strong { color: var(--ink); font-weight: 600; }
+
+  .divider {
+    height: 1px;
+    background: var(--line);
+    margin: 28px 0;
+  }
+
+  .choice-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .choice {
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 16px 18px;
+    background: var(--paper);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 15px;
+    text-align: left;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  }
+
+  .choice:hover { border-color: var(--ink); background: #FBFAF7; }
+  .choice:active { transform: scale(0.99); }
+  .choice.selected { border-color: var(--ink); background: #FBFAF7; font-weight: 600; }
+
+  .choice-title { font-weight: 600; margin-bottom: 4px; }
+  .choice-desc { font-size: 13px; color: var(--ink-soft); }
+
+  input[type="text"] {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-family: var(--font-body);
+    background: var(--cream);
+    color: var(--ink);
+    margin-bottom: 20px;
+  }
+  input[type="text"]:focus { outline: none; border-color: var(--ink); }
+
+  .btn-row { display: flex; gap: 10px; }
+
+  .btn {
+    flex: 1;
+    padding: 15px 18px;
+    border-radius: 3px;
+    border: 1px solid var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+    text-align: center;
+  }
+
+  .btn:hover { opacity: 0.85; }
+
+  .btn-primary { background: var(--ink); color: var(--cream); }
+  .btn-ghost { background: transparent; color: var(--ink); }
+
+  .progress-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+
+  .progress-track {
+    height: 3px;
+    background: var(--line);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 30px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--rust);
+    transition: width 0.35s ease;
+  }
+
+  .q-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--rust);
+    margin-bottom: 10px;
+  }
+
+  .q-text {
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 1.5;
+    margin-bottom: 26px;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-top: 22px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: var(--font-body);
+  }
+  .back-link:hover { color: var(--ink); }
+
+  /* Result — template layout */
+  .result-card { padding: 40px 36px 34px; }
+
+  .result-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+    animation: fadeIn 0.4s ease both;
+  }
+
+  .result-title {
+    font-family: var(--font-display);
+    font-size: 38px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--type-color);
+    margin-bottom: 6px;
+    animation: riseIn 0.5s 0.05s cubic-bezier(.16,.84,.44,1) both;
+  }
+
+  .result-title .en {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    vertical-align: middle;
+    margin-left: 2px;
+  }
+
+  .bar-item-name .en {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-left: 2px;
+  }
+
+  .result-archetype {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 20px;
+  }
+
+  .result-quote {
+    font-family: var(--font-display);
+    font-size: 19px;
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes riseIn { from { opacity:0; transform: translateY(8px);} to { opacity:1; transform: translateY(0);} }
+  @keyframes growBar { from { width: 0%; } }
+
+  .bar-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+
+  .bar-item-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+
+  .bar-item-name { font-weight: 600; }
+  .bar-item-name.lead { font-weight: 700; }
+  .bar-item-score { font-family: var(--font-mono); color: var(--ink-soft); font-size: 12px; }
+
+  .bar-track {
+    height: 7px;
+    background: var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar-track.thin { height: 5px; }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.9s cubic-bezier(.16,.84,.44,1);
+  }
+
+  .insight-box {
+    border-radius: 4px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+
+  .insight-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--type-color);
+    margin-bottom: 10px;
+  }
+
+  .insight-list { list-style: none; }
+  .insight-list li {
+    font-size: 13.5px;
+    line-height: 1.9;
+    padding-left: 16px;
+    position: relative;
+  }
+  .insight-list li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--type-color);
+  }
+
+  .theory-heading {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+  }
+
+  .theory-list { display: flex; flex-direction: column; gap: 9px; margin-bottom: 24px; }
+  .theory-row { font-size: 13px; line-height: 1.6; }
+  .theory-name { font-weight: 700; margin-right: 6px; }
+
+  .roosevelt {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.7;
+    text-align: center;
+    color: var(--ink-soft);
+    padding: 20px 10px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 20px;
+  }
+  .roosevelt .attr { display:block; margin-top: 8px; font-style: normal; font-size: 12px; }
+
+  .footnote {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 22px;
+    line-height: 1.7;
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 32px 24px; }
+    h1 { font-size: 25px; }
+    .result-card { padding: 32px 24px 28px; }
+    .result-title { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  // ---------- Firebase ----------
+  // 아래 6개 값을 Firebase 콘솔 > 프로젝트 설정 > 내 앱에서 복사해 넣으세요.
+  var firebaseConfig = {
+    apiKey: "AIzaSyDpoxhAmp8d3TqpVU8TWG6Kbn92HKI4AiU",
+    authDomain: "relationship-diagnostic.firebaseapp.com",
+    projectId: "relationship-diagnostic",
+    storageBucket: "relationship-diagnostic.firebasestorage.app",
+    messagingSenderId: "779202895011",
+    appId: "1:779202895011:web:a51e6646c48057b66a3316"
+  };
+  var db = null;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  } catch (e) {
+    console.warn('Firebase 초기화 실패 — firebaseConfig 값을 채워주세요.', e);
+  }
+
+  function shade(hex, pct){
+    var f = parseInt(hex.slice(1),16), t = pct<0?0:255, p = pct<0?pct*-1:pct;
+    var R = f>>16, G = (f>>8)&0x00FF, B = f&0x0000FF;
+    return "#" + (0x1000000 + (Math.round((t-R)*p)+R)*0x10000 + (Math.round((t-G)*p)+G)*0x100 + (Math.round((t-B)*p)+B)).toString(16).slice(1);
+  }
+
+  // ---------- data ----------
+  var QUESTIONS_SELF = [
+    { id:1,  axis:'taker',   text:"성과가 나면 '내가 주도했다'는 걸 분명히 해두는 편이다." },
+    { id:2,  axis:'taker',   text:"함께 해낸 일도 결국 내 성과로 정리하는 게 편하다." },
+    { id:3,  axis:'taker',   text:"필요하면 관계보다 결과를 먼저 챙긴다." },
+    { id:4,  axis:'matcher', text:"받은 만큼 돌려주고, 준 만큼 돌아오는 게 공정하다고 본다." },
+    { id:5,  axis:'matcher', text:"내 역할과 남의 역할의 경계를 분명히 긋는 편이다." },
+    { id:6,  axis:'matcher', text:"손해 보는 관계는 오래 끌지 않고 정리하는 편이다." },
+    { id:7,  axis:'giver',   text:"함께 일하는 사람의 성장까지 내 일처럼 신경 쓰는 편이다." },
+    { id:8,  axis:'giver',   text:"내 공을 챙기기보다 팀 전체가 잘 되는 쪽을 먼저 본다." },
+    { id:9,  axis:'giver',   text:"사람들이 나와 한 번 더 일하고 싶어 한다고 느낀다." },
+    { id:10, axis:'doormat', text:"손해인 걸 알면서도 부탁을 잘 거절하지 못한다." },
+    { id:11, axis:'doormat', text:"내가 힘들어도 다른 사람 부탁을 먼저 들어주게 된다." },
+    { id:12, axis:'doormat', text:"돌려받을 생각 없이 계속 퍼주는 편이다." }
+  ];
+
+  var QUESTIONS_OTHER = [
+    { id:1,  axis:'taker',   text:"함께 해낸 일인데, 어느새 그 사람의 공으로 정리되어 있다." },
+    { id:2,  axis:'taker',   text:"이 사람과 일하고 나면 인정받지 못했다는 답답함이 남는다." },
+    { id:3,  axis:'taker',   text:"이 사람은 관계보다 결과를 먼저 챙긴다." },
+    { id:4,  axis:'matcher', text:"도움을 청하면 '그건 내 역할이 아니다'라는 선이 분명하다." },
+    { id:5,  axis:'matcher', text:"이 사람은 자기 일과 남의 일을 칼같이 구분한다." },
+    { id:6,  axis:'matcher', text:"함께 일해도 딱 비즈니스 같고, 마음의 거리는 잘 줄지 않는다." },
+    { id:7,  axis:'giver',   text:"이 사람과 일하면 이상하게 더 해주고 싶어진다." },
+    { id:8,  axis:'giver',   text:"이 사람은 내 성과만이 아니라 내 성장까지 생각해 준다." },
+    { id:9,  axis:'giver',   text:"이 사람의 사고방식이 궁금하고, 또 같이 일해보고 싶다." },
+    { id:10, axis:'doormat', text:"이 사람은 손해를 보면서도 부탁을 잘 거절하지 못한다." },
+    { id:11, axis:'doormat', text:"이 사람에게는 부탁하기가 유독 쉽다 — 다 들어줄 것 같아서." },
+    { id:12, axis:'doormat', text:"이 사람이 계속 퍼주기만 하는 것 같아 걱정될 때가 있다." }
+  ];
+
+  var OPTIONS = [
+    { v:1, label:'전혀 아니다' },
+    { v:2, label:'별로 아니다' },
+    { v:3, label:'조금 그렇다' },
+    { v:4, label:'매우 그렇다' }
+  ];
+
+  var TYPE_META = {
+    taker: {
+      name:'테이커', en:'Taker', emoji:'🟢',
+      archetype:'성과와 결과로 자신의 가치를 증명하는 사람',
+      color:'var(--moss)', hex:'#3F6B45',
+      quote:'확실한 성과로 존재감을 남기는 사람.',
+      bullets:[
+        '성과와 결과를 명확한 기준으로 삼는다',
+        '자신의 기여를 분명하게 드러낸다',
+        '효율과 목표 달성을 중요하게 여긴다',
+        '관계보다 실질적인 성과에 먼저 집중한다'
+      ],
+      theory:{
+        grant:'Taker — 주는 것보다 받는 것에 더 무게를 두는 사람',
+        sinek:'자기 안전과 생존을 우선하는 관점',
+        senge:'단기 성과와 개별 목표에 집중하는 시스템 관점'
+      }
+    },
+    matcher: {
+      name:'매쳐', en:'Matcher', emoji:'🔵',
+      archetype:'신뢰할 수 있는 균형 감각을 가진 사람',
+      color:'var(--slate)', hex:'#3B4A66',
+      quote:'공정함으로 신뢰를 쌓아가는 사람.',
+      bullets:[
+        '역할과 책임의 경계가 분명하다',
+        '공과 사를 명확히 구분한다',
+        '받은 만큼 돌려주는 공정함을 중요하게 여긴다',
+        '일관된 기준으로 신뢰를 쌓는다'
+      ],
+      theory:{
+        grant:'Matcher — 주고받음의 균형을 맞추는 사람',
+        sinek:'거래적 신뢰를 기반으로 관계를 맺는 방식',
+        senge:'자기 영역과 책임 범위를 명확히 하는 시스템 관점'
+      }
+    },
+    giver: {
+      name:'기버', en:'Giver', emoji:'🟡',
+      archetype:'경계 있게, 기준 있게 베푸는 사람',
+      color:'var(--amber)', hex:'#C9A227',
+      quote:'내 것보다 팀의 성공을 먼저 보는 사람.',
+      bullets:[
+        '내 공보다 팀 전체의 성공을 먼저 본다',
+        '상대의 성과만이 아니라 성장까지 살핀다',
+        '성과와 관계를 동시에 끌고 간다',
+        '곁에 있으면 더 해주고 싶어지게 만든다'
+      ],
+      theory:{
+        grant:'성공하는 Giver — 기준 있는 베풂',
+        sinek:'Leaders Eat Last — 팀의 안전 먼저',
+        senge:'Shared Vision · Team Learning'
+      }
+    },
+    doormat: {
+      name:'호구', en:'Doormat', emoji:'🔴',
+      archetype:'누구보다 마음이 넓게, 아낌없이 내어주는 사람',
+      color:'var(--rust)', hex:'#C1452D',
+      quote:'마음이 큰 만큼, 나를 위한 여유도 필요한 사람.',
+      bullets:[
+        '웬만하면 부탁을 잘 거절하지 않는다',
+        '내가 힘들어도 남의 부탁을 먼저 들어준다',
+        '대가를 바라지 않고 마음을 쓴다',
+        '가끔은 자신을 위한 시간도 필요하다'
+      ],
+      theory:{
+        grant:'한계 없이 베푸는 Giver — 자신을 위한 기준이 필요한 유형',
+        sinek:'Leaders Eat Last의 다음 과제 — 자기 자신도 챙기는 리더십',
+        senge:'경계 있는 베풂을 위한 개인 완성(Personal Mastery)'
+      }
+    }
+  };
+
+  var ROOSEVELT = '“사람들은 당신이 얼마나 아는지보다, 당신이 얼마나 자신들을 생각하는지 먼저 느낀다.”';
+
+  // tie-break: 특정 유형을 우대하지 않도록 문항 정의 순서(테이커→매쳐→기버→호구)로 처리
+  var PRIORITY = ['taker', 'matcher', 'giver', 'doormat'];
+
+
+  // ---------- state ----------
+  var state = {
+    screen: 'intro',   // intro | name | quiz | result
+    mode: 'self',      // self | other
+    name: '',
+    qIndex: 0,
+    answers: {},       // qId -> value
+    saved: false        // Firestore 저장 여부(결과 화면당 1회)
+  };
+
+  function currentQuestions() {
+    return state.mode === 'other' ? QUESTIONS_OTHER : QUESTIONS_SELF;
+  }
+
+  var stage = document.getElementById('stage');
+
+  function render() {
+    if (state.screen === 'intro') renderIntro();
+    else if (state.screen === 'name') renderName();
+    else if (state.screen === 'quiz') renderQuiz();
+    else renderResult();
+  }
+
+  function typeLabel(k){
+    var m = TYPE_META[k];
+    return '<span style="color:' + m.hex + ';font-weight:600">' + m.emoji + ' ' + m.name + '</span>';
+  }
+
+  function typeLabelSoft(k){
+    var m = TYPE_META[k];
+    return '<span style="color:' + shade(m.hex, 0.4) + ';font-weight:600">' + m.name + '</span>';
+  }
+
+  function renderIntro() {
+    stage.innerHTML =
+      '<div class="card">' +
+        '<h1>관계정서진단</h1>' +
+        '<p class="lead" style="margin-bottom:22px;font-size:14px">' + typeLabelSoft('taker') + ' · ' + typeLabelSoft('matcher') + ' · ' + typeLabelSoft('giver') + ' · ' + typeLabelSoft('doormat') + '</p>' +
+        '<p class="lead">함께 일할 때 사람은 넷 중 하나의 자리를 차지합니다 — 자기 몫부터 챙기는 ' + typeLabelSoft('taker') + ', 정확히 균형을 재는 ' + typeLabelSoft('matcher') + ', 경계 있게 베푸는 ' + typeLabelSoft('giver') + ', 그리고 경계 없이 다 퍼주는 ' + typeLabelSoft('doormat') + '.</p>' +
+        '<p class="lead">Adam Grant · Simon Sinek · Peter Senge가 각자 다른 언어로 가리킨 같은 자리를, 12개 문항으로 확인합니다.</p>' +
+        '<div class="divider"></div>' +
+        '<p class="lead" style="margin-bottom:14px"><strong>무엇을 진단할까요?</strong></p>' +
+        '<div class="choice-list">' +
+          '<div class="choice" onclick="App.chooseMode(\'other\')">' +
+            '<div class="choice-title">그 사람을 진단</div>' +
+            '<div class="choice-desc">같이 일하는 동료·팀원이 어떤 유형인지</div>' +
+          '</div>' +
+          '<div class="choice" onclick="App.chooseMode(\'self\')">' +
+            '<div class="choice-title">나를 진단</div>' +
+            '<div class="choice-desc">나는 관계에서 주로 어떤 자리를 차지하는지</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderName() {
+    var isOther = state.mode === 'other';
+    var title = isOther ? '그 사람의 이름을(를) 알려주세요.' : '당신의 이름을(를) 알려주세요.';
+    var desc = isOther
+      ? '결과를 정리할 때 누구의 진단인지 구분하기 위해 사용됩니다. 선택사항입니다 — 비워두고 넘어가도 괜찮아요.'
+      : '결과 화면에 표시됩니다. 선택사항이에요 — 비워두고 넘어가도 괜찮아요.';
+    var placeholder = isOther ? '이름 또는 별명' : '이름';
+
+    stage.innerHTML =
+      '<div class="card">' +
+        '<div class="eyebrow">시작하기 전에</div>' +
+        '<h1 style="font-size:22px">' + title + '</h1>' +
+        '<p class="lead" style="margin-bottom:18px">' + desc + '</p>' +
+        '<input type="text" id="nameInput" placeholder="' + placeholder + '" value="' + escapeHtml(state.name) + '">' +
+        '<div class="btn-row">' +
+          '<button class="btn btn-ghost" onclick="App.skipName()">건너뛰고 시작</button>' +
+          '<button class="btn btn-primary" onclick="App.startQuiz()">진단 시작</button>' +
+        '</div>' +
+        '<button class="back-link" onclick="App.go(\'intro\')">‹ 처음으로</button>' +
+      '</div>';
+  }
+
+  function renderQuiz() {
+    var i = state.qIndex;
+    var questions = currentQuestions();
+    var q = questions[i];
+    var selected = state.answers[q.id];
+    var pct = Math.round((i / questions.length) * 100);
+    var headerLabel = state.mode === 'other' ? '그 사람을 진단' : '나를 진단';
+
+    var optsHtml = OPTIONS.map(function(o){
+      var sel = selected === o.v ? ' selected' : '';
+      return '<div class="choice' + sel + '" onclick="App.answer(' + q.id + ',' + o.v + ')">' + o.label + '</div>';
+    }).join('');
+
+    stage.innerHTML =
+      '<div class="card">' +
+        '<div class="progress-row"><span>' + headerLabel + '</span><span>' + i + ' / ' + questions.length + '</span></div>' +
+        '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="q-label">Q' + (i+1) + '</div>' +
+        '<div class="q-text">' + q.text + '</div>' +
+        '<div class="choice-list">' + optsHtml + '</div>' +
+        (i > 0 ? '<button class="back-link" onclick="App.prevQ()">‹ 이전 문항</button>' : '<button class="back-link" onclick="App.go(\'name\')">‹ 처음으로</button>') +
+      '</div>';
+  }
+
+  function computeScores() {
+    var scores = { taker:0, matcher:0, giver:0, doormat:0 };
+    currentQuestions().forEach(function(q){
+      var v = state.answers[q.id] || 0;
+      scores[q.axis] += v;
+    });
+    return scores; // each axis 3~12
+  }
+
+  function renderResult() {
+    var scores = computeScores();
+
+    var axisOrder = ['taker','matcher','giver','doormat'];
+    var ranked = axisOrder.slice().sort(function(a,b){
+      if (scores[b] !== scores[a]) return scores[b] - scores[a];
+      return PRIORITY.indexOf(a) - PRIORITY.indexOf(b);
+    });
+    var primary = ranked[0];
+    var meta = TYPE_META[primary];
+
+    if (db && !state.saved) {
+      state.saved = true;
+      db.collection('diagnoses').add({
+        mode: state.mode,
+        name: state.name || null,
+        type: primary,
+        scores: scores,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function(e){ console.warn('저장 실패', e); });
+    }
+
+    var scoreTotal = scores.taker + scores.matcher + scores.giver + scores.doormat;
+    function pctShare(k){ return scoreTotal ? Math.round((scores[k]/scoreTotal)*100) : 25; }
+
+    var isOther = state.mode === 'other';
+    var eyebrow;
+    if (state.name) {
+      eyebrow = escapeHtml(state.name) + (isOther ? '의 유형은' : '님의 유형은');
+    } else {
+      eyebrow = isOther ? '그 사람의 유형은' : '당신의 유형은';
+    }
+
+    var barList = ranked.map(function(k, idx){
+      var m = TYPE_META[k];
+      var isLead = idx === 0;
+      return (
+        '<div class="bar-item">' +
+          '<div class="bar-item-head">' +
+            '<span class="bar-item-name' + (isLead ? ' lead' : '') + '" style="color:' + (isLead ? m.hex : 'var(--ink)') + '">' + m.emoji + ' ' + m.name + ' <span class="en">' + m.en + '</span></span>' +
+            '<span class="bar-item-score">' + pctShare(k) + '%</span>' +
+          '</div>' +
+          '<div class="bar-track' + (isLead ? '' : ' thin') + '"><div class="bar-fill js-bar" data-pct="' + pctShare(k) + '" style="background:' + m.hex + '"></div></div>' +
+        '</div>'
+      );
+    }).join('');
+
+    var bulletsHtml = meta.bullets.map(function(b){ return '<li>' + b + '</li>'; }).join('');
+
+    var theoryHtml =
+      '<div class="theory-row"><span class="theory-name" style="color:' + meta.hex + '">Adam Grant</span>' + meta.theory.grant + '</div>' +
+      '<div class="theory-row"><span class="theory-name" style="color:' + meta.hex + '">Simon Sinek</span>' + meta.theory.sinek + '</div>' +
+      '<div class="theory-row"><span class="theory-name" style="color:' + meta.hex + '">Peter Senge</span>' + meta.theory.senge + '</div>';
+
+    stage.innerHTML =
+      '<div class="card result-card" style="--type-color:' + meta.hex + '">' +
+        '<div class="result-eyebrow">' + eyebrow + '</div>' +
+        '<div class="result-title">' + meta.emoji + ' ' + meta.name + ' <span class="en">' + meta.en + '</span></div>' +
+        '<div class="result-archetype">' + meta.archetype + '</div>' +
+        '<div class="result-quote">“' + meta.quote + '”</div>' +
+
+        '<div class="bar-list">' + barList + '</div>' +
+
+        '<div class="insight-box" style="background:' + shade(meta.hex, 0.9) + '">' +
+          '<div class="insight-title">이런 모습이 보입니다</div>' +
+          '<ul class="insight-list">' + bulletsHtml + '</ul>' +
+        '</div>' +
+
+        '<div class="theory-heading">세 이론이 같은 자리를 가리킵니다</div>' +
+        '<div class="theory-list">' + theoryHtml + '</div>' +
+
+        '<div class="roosevelt">' + ROOSEVELT + '<span class="attr">— Theodore Roosevelt</span></div>' +
+
+        '<div class="footnote">각 유형(3문항)의 점수를 모두 더한 뒤, 그중 이 유형이 차지하는 비율로 퍼센트를 계산합니다. 네 유형은 우열이 아니라 서로 다른 관계 방식입니다.</div>' +
+
+        '<div class="btn-row">' +
+          '<button class="btn btn-ghost" style="width:100%" onclick="App.restart()">다시 진단하기</button>' +
+        '</div>' +
+      '</div>';
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        stage.querySelectorAll('.js-bar').forEach(function(el){
+          el.style.width = el.getAttribute('data-pct') + '%';
+        });
+      });
+    });
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  window.App = {
+    go: function(screen){ state.screen = screen; render(); },
+    chooseMode: function(mode){
+      state.mode = mode;
+      state.name = '';
+      state.answers = {};
+      state.qIndex = 0;
+      state.screen = 'name';
+      render();
+    },
+    skipName: function(){ state.name = ''; state.screen='quiz'; state.qIndex=0; render(); },
+    startQuiz: function(){
+      var el = document.getElementById('nameInput');
+      state.name = el ? el.value.trim() : '';
+      state.screen = 'quiz';
+      state.qIndex = 0;
+      render();
+    },
+    answer: function(qId, val){
+      state.answers[qId] = val;
+      var questions = currentQuestions();
+      if (state.qIndex < questions.length - 1) {
+        state.qIndex += 1;
+        render();
+      } else {
+        state.screen = 'result';
+        render();
+      }
+    },
+    prevQ: function(){
+      if (state.qIndex > 0) { state.qIndex -= 1; render(); }
+    },
+    restart: function(){
+      state = { screen:'intro', name:'', qIndex:0, answers:{}, saved:false };
+      render();
+    }
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>

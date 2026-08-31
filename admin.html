@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관계정서진단 — 매니저</title>
+<style>
+  :root {
+    --cream: #F4F1EA;
+    --paper: #FFFFFF;
+    --ink: #2A2420;
+    --ink-soft: #6B6255;
+    --line: #E4DDD0;
+    --rust: #C1452D;
+    --moss: #3F6B45;
+    --slate: #3B4A66;
+    --amber: #C9A227;
+    --font-display: "Noto Serif KR", "Apple SD Gothic Neo", serif;
+    --font-body: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif;
+    --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--cream);
+    min-height: 100vh;
+    padding: 32px 20px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 36px;
+  }
+  h1 { font-family: var(--font-display); font-size: 24px; margin-bottom: 6px; }
+  .sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 24px; }
+  input {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 12px 14px;
+    font-size: 15px;
+    margin-bottom: 12px;
+    background: var(--cream);
+  }
+  button {
+    width: 100%;
+    padding: 13px;
+    border-radius: 3px;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--cream);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  #loginError { color: var(--rust); font-size: 13px; margin-top: 10px; display:none; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+  th { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); text-transform: uppercase; }
+  .type-chip { padding: 3px 9px; border-radius: 12px; font-weight: 600; font-size: 12px; color: #fff; display:inline-block; }
+  .top-row { display:flex; justify-content: space-between; align-items:center; margin-bottom: 18px; }
+  .count { font-family: var(--font-mono); font-size: 13px; color: var(--ink-soft); }
+  .logout { font-size: 12px; color: var(--ink-soft); cursor: pointer; background:none; border:none; width:auto; padding:0; }
+  #dash { display: none; }
+  .empty { color: var(--ink-soft); font-size: 14px; padding: 30px 0; text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="loginCard">
+    <h1>관계정서진단 — 매니저</h1>
+    <div class="sub">진단 이력을 보려면 비밀번호를 입력하세요.</div>
+    <input type="password" id="password" placeholder="비밀번호" onkeydown="if(event.key==='Enter') doLogin()">
+    <button onclick="doLogin()">들어가기</button>
+    <div id="loginError">비밀번호가 올바르지 않습니다.</div>
+  </div>
+
+  <div class="card" id="dash">
+    <div class="top-row">
+      <div>
+        <h1 style="margin-bottom:2px">진단 이력</h1>
+        <div class="sub" style="margin-bottom:0">전체 응답 목록</div>
+      </div>
+      <div style="text-align:right">
+        <div class="count" id="count">0건</div>
+        <button class="logout" onclick="doLogout()">로그아웃</button>
+      </div>
+    </div>
+    <div id="tableWrap"></div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  // 아래 6개 값을 Firebase 콘솔 > 프로젝트 설정 > 내 앱에서 복사해 넣으세요. (index.html과 동일한 값)
+  var firebaseConfig = {
+    apiKey: "AIzaSyDpoxhAmp8d3TqpVU8TWG6Kbn92HKI4AiU",
+    authDomain: "relationship-diagnostic.firebaseapp.com",
+    projectId: "relationship-diagnostic",
+    storageBucket: "relationship-diagnostic.firebasestorage.app",
+    messagingSenderId: "779202895011",
+    appId: "1:779202895011:web:a51e6646c48057b66a3316"
+  };
+  firebase.initializeApp(firebaseConfig);
+  var db = firebase.firestore();
+
+  var ADMIN_PASSWORD = '1234';
+
+  var TYPE_COLOR = { taker:'#3F6B45', matcher:'#3B4A66', giver:'#C9A227', doormat:'#C1452D' };
+  var TYPE_NAME  = { taker:'테이커', matcher:'매쳐', giver:'기버', doormat:'호구' };
+
+  function doLogin(){
+    var pw = document.getElementById('password').value;
+    document.getElementById('loginError').style.display = 'none';
+    if (pw === ADMIN_PASSWORD) {
+      document.getElementById('loginCard').style.display = 'none';
+      document.getElementById('dash').style.display = 'block';
+      loadData();
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
+  }
+
+  function doLogout(){
+    document.getElementById('password').value = '';
+    document.getElementById('loginCard').style.display = 'block';
+    document.getElementById('dash').style.display = 'none';
+  }
+
+  function fmtDate(ts){
+    if (!ts || !ts.toDate) return '-';
+    var d = ts.toDate();
+    return d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0') +
+           ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+
+  function loadData(){
+    db.collection('diagnoses').orderBy('createdAt', 'desc').limit(300).get().then(function(snap){
+      var rows = [];
+      snap.forEach(function(doc){ rows.push(doc.data()); });
+      document.getElementById('count').textContent = rows.length + '건';
+      if (rows.length === 0) {
+        document.getElementById('tableWrap').innerHTML = '<div class="empty">아직 진단 이력이 없습니다.</div>';
+        return;
+      }
+      var html = '<table><thead><tr><th>일시</th><th>이름</th><th>모드</th><th>유형</th><th>테이커</th><th>매쳐</th><th>기버</th><th>호구</th></tr></thead><tbody>';
+      rows.forEach(function(r){
+        var s = r.scores || {};
+        html += '<tr>' +
+          '<td>' + fmtDate(r.createdAt) + '</td>' +
+          '<td>' + (r.name ? escapeHtml(r.name) : '<span style="color:var(--ink-soft)">-</span>') + '</td>' +
+          '<td>' + (r.mode === 'other' ? '그 사람을 진단' : '나를 진단') + '</td>' +
+          '<td><span class="type-chip" style="background:' + (TYPE_COLOR[r.type]||'#999') + '">' + (TYPE_NAME[r.type]||r.type) + '</span></td>' +
+          '<td>' + (s.taker!=null?s.taker:'-') + '</td>' +
+          '<td>' + (s.matcher!=null?s.matcher:'-') + '</td>' +
+          '<td>' + (s.giver!=null?s.giver:'-') + '</td>' +
+          '<td>' + (s.doormat!=null?s.doormat:'-') + '</td>' +
+        '</tr>';
+      });
+      html += '</tbody></table>';
+      document.getElementById('tableWrap').innerHTML = html;
+    }).catch(function(err){
+      document.getElementById('tableWrap').innerHTML = '<div class="empty">불러오기 실패: ' + err.message + '</div>';
+    });
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+</script>
+</body>
+</html>
